@@ -1,50 +1,164 @@
-import { Plugin, PluginEvents, PluginType } from "@serenityjs/plugins";
+import { ContainerName, Packet } from "@serenityjs/protocol";
+import { Plugin, PluginPriority } from "@serenityjs/plugins";
 
-// This is a sample plugin that has a class-based implementation.
-// In Serenity, there are two types of plugins: class-based and function-based.
-// Class-based plugins are more flexible and can be used to create more complex plugins.
-// Function-based plugins are simpler and are used for creating simple plugins.
+import { ChestForm, ChestFormContainer } from "./form";
 
-class SamplePlugin extends Plugin implements PluginEvents {
-  // Type declares the type of the plugin.
+class ChestFormPlugin extends Plugin {
+  // Makes sure the plugin is loaded first
+  public readonly priority: PluginPriority = PluginPriority.High;
 
-  // An addon plugin is bundled to the most simplistic form, without any type declarations.
-  // Addon plugins are extracted at runtime and are destroyed after the server is shut down.
-  // Addon plugins are used for creating simple commands, events, and other features that don't require a lot of complexity.
+  /**
+   * The ChestFormContainer class that is used to create chest forms.
+  */
+  public readonly ChestFormContainer = ChestFormContainer;
 
-  // An api plugin is a plugin that exposes an api to allow other plugins to interact with.
-  // Api plugins are extracted once, and the source file is deleted after the extraction.
-  // The api plugin is then added to the server workspace, and other plugins can interact with it.
-  // Api plugins are used for creating complex features that require multiple plugins to interact with each other.
-  // Some examples of api plugins are the land claim plugin, the economy plugin, and the permission plugin.
-  public readonly type = PluginType.Addon;
+  /**
+   * The ChestForm class that is used to create a chest form.
+  */
+  public readonly ChestForm = ChestForm;
 
+  /**
+   * Constructor for the ChestFormPlugin.
+   */
   public constructor() {
-    // Super assigns the name and version of the plugin.
-    // There is an additional parameter that can be passed to the super constructor,
-    // but since this is a class-based plugin, it is not required, as the properties & methods can be directly created in the class.
-    super("sample-plugin", "1.0.0");
+    super("chest-form", "0.1.0");
   }
 
-  // This method is called right after the plugin is loaded from the file system.
-  // Once this method is called, `this.serenity` & `this.pipeline` will be in scope.
-  // This method should be used when registering any custom features; such as commands, traits, generators, providers, blocks, etc.
-  public onInitialize(): void {
-    this.logger.info("Sample plugin initialized!");
-  }
+  public override onInitialize(): void {
+    this.logger.info("ChestFormPlugin initialized");
 
-  // This method is called once all plugins have been initialized and all worlds have been loaded.
-  // This method should be used to start any services and tasks that the plugin requires.
-  public onStartUp(): void {
-    this.logger.info("Sample plugin started up!");
-  }
+    // Listen for item stack requests
+    this.serenity.network.before(Packet.ItemStackRequest, ({ packet, connection }) => {
+      // Get the player instance from the connection
+      const player = this.serenity.getPlayerByConnection(connection);
+      if (!player) return false; // If no player is found, do not proceed
 
-  // This method is called when the server is shutting down, but is called before the worlds and raknet server are shut down.
-  // This method should be used to stop any services and tasks that the plugin started up.
-  // This also should be used to clean up any resources that the plugin created via the `onInitialize` method.
-  public onShutDown(): void {
-    this.logger.info("Sample plugin shut down!");
+      // Iterate through the requests in the packet
+      for (const request of packet.requests) {
+        for (const action of request.actions) {
+          // Check if the action is a take or place action
+          if (action.takeOrPlace) {
+            const takeOrPlace = action.takeOrPlace;
+
+            const source = player.getContainer(takeOrPlace.source.container.identifier);
+            const destination = player.getContainer(takeOrPlace.destination.container.identifier);
+
+            if (destination instanceof ChestFormContainer) {
+              // Get the source container and inventory
+              const source = player.getContainer(takeOrPlace.source.container.identifier)!;
+              const inventory = player.getContainer(ContainerName.Inventory)!;
+
+              // Get the item stack from the source container
+              const stack = source.takeItem(takeOrPlace.source.slot, takeOrPlace.amount);
+
+              // If the stack is valid, add it to the inventory
+              if (stack) inventory.addItem(stack)
+
+              // Update the source and destination containers
+              inventory.update();
+              destination.update();
+
+              return false; // Prevent the default behavior for item stack requests in ChestForm
+            }
+
+            if (source instanceof ChestFormContainer) {
+              // Get the item stack from the source container
+              const stack = source.getItem(takeOrPlace.source.slot);
+
+              // Check if the stack is valid
+              if (!stack) return false; // If no stack is found, do not proceed
+
+              // Get the selected slot from the take or place action
+              const selectedSlot = takeOrPlace.source.slot;
+
+              // Close the chest form if the player is trying to take an item from it
+              source.close(player, true, selectedSlot);
+
+              return false; // Prevent the default behavior for item stack requests in ChestForm
+            }
+          }
+
+          // Check if the action is a swap action
+          if (action.swap) {
+            // Get the swap action
+            const swap = action.swap;
+
+            // Get the source and destination containers
+            const source = player.getContainer(swap.source.container.identifier)!;
+            const destination = player.getContainer(swap.destination.container.identifier)!;
+
+            // Check if the destination is a ChestFormContainer
+            if (destination instanceof ChestFormContainer) {
+              // Get the item stack from the source container
+              const stack = destination.getItem(swap.destination.slot);
+
+              // Check if the stack is valid
+              if (!stack) return false; // If no stack is found, do not proceed
+
+              // Get the inventory container
+              const inventory = player.getContainer(ContainerName.Inventory)!;
+
+              // Get the item stack from the source container
+              const sourceStack = source.getItem(swap.source.slot);
+
+              // If the source stack is valid, add it to the inventory
+              if (sourceStack) {
+                // Add the source stack to the inventory
+                inventory.addItem(sourceStack);
+
+                // Clear the source slot in the ChestFormContainer
+                source.clearSlot(swap.source.slot);
+              }
+
+              // Get the selected slot from the swap action
+              const selectedSlot = swap.destination.slot;
+
+              // Close the chest form if the player is trying to swap an item in it
+              destination.close(player, true, selectedSlot);
+
+              return false; // Prevent the default behavior for item stack requests in ChestForm 
+            }
+
+            // Check if the source is a ChestFormContainer
+            if (source instanceof ChestFormContainer) {
+              return false; // Prevent the default behavior for item stack requests in ChestForm
+            }
+          }
+
+          // Check if the action is a drop action
+          if (action.drop) {
+            // Get the drop action
+            const drop = action.drop;
+
+            // Get the source container
+            const source = player.getContainer(drop.source.container.identifier)!;
+
+            // Check if the source is a ChestFormContainer
+            if (source instanceof ChestFormContainer) {
+              // Get the item stack from the source container
+              const stack = source.getItem(drop.source.slot);
+
+              // Check if the stack is valid
+              if (!stack) return false; // If no stack is found, do not proceed
+
+              // Get the selected slot from the drop action
+              const selectedSlot = drop.source.slot;
+
+              // Close the chest form if the player is trying to drop an item from it
+              source.close(player, true, selectedSlot);
+
+              return false; // Prevent the default behavior for item stack requests in ChestForm
+            }
+          }
+        }
+      }
+
+      // Prevent the default behavior for item stack requests in ChestForm
+      return true;
+    });
   }
 }
 
-export default new SamplePlugin();
+export default new ChestFormPlugin();
+
+export { ChestFormPlugin, ChestForm, ChestFormContainer };

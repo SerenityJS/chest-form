@@ -1,13 +1,15 @@
 {
-  "name": "sample-plugin",
-  "version": "1.0.0",
+  "name": "chest-form",
+  "version": "0.1.0",
   "author": "SerenityJS",
   "description": "Sample plugin provides a basic configuration for plugin usage in the SerenityJS software.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "watch": "tsup --watch"
   },
   "tsup": {
     "entry": [
@@ -25,11 +27,16 @@
     "Example"
   ],
   "peerDependencies": {
-    "@serenityjs/core": "*",
-    "@serenityjs/plugins": "*"
+    "@serenityjs/core": "^0.8.8-beta-20250808230525",
+    "@serenityjs/plugins": "^0.8.8-beta-20250808230525",
+    "@serenityjs/protocol": "^0.8.8-beta-20250808230525"
   },
   "devDependencies": {
     "tsup": "^8.3.5",
     "typescript": "^5.6.3"
-  }
+  },
+  "files": [
+    "dist/**",
+    "README.md"
+  ]
 }

@@ -1,17 +1,58 @@
-# Introduction
+# Chest Form
 
-The SerenityJS sample plugin provides a basic configuration for plugin usage in the software. To get started, either clone this repo or create a new repository using this template. A firm understanding of TypeScript and JavaScript will be very beneficial for plugin development.
+> **Create FormUI-like interactable forms using ChestUI.**
 
-## Usage
+## Getting Started
+1. **Install the Plugin:** Add the `chest-form` plugin to your SerenityJS server's `plugins` directory.
 
-The plugin system in SerenityJS is pretty simple to use and to develop on. Make sure you place your plugin within the `plugins` directory within your SerenityJS server. Once the server starts up, it will recognize the plugin and process it accordingly. Plugins that are written in TypeScript will be built upon usage. Visit our [documentation](https://serenityjs.net/) to get started!
+2. **Install the Typings:** Install the NPM package to your existing plugin project, this allows you to use the `chest-form` features in your own plugins!
+    ```bash
+    #npm
+    npm install chest-form
 
-## Building
+    #yarn
+    yarn add chest-form
 
-This plugin sample uses TypeScript to build your plugin. Anytime you make a change to your plugin, you will need to transpile your code into pure JavaScript. To do this, run the command `npm run build` in the source directory of your plugin. You should notice a new `dist` directory was created. The will be the entry point to your plugin.
+    #bun
+    bun add chest-form
+    ```
 
-### Getting Started
-Learn the basics of creating custom commands and the format for overloads. [Custom Commands](./examples/commands/README.md/)
+3. **Import the Plugin Typings:** In your plugin's main file, import the `ChestFormPlugin` class.
+    ```typescript
+    import type { ChestFormPlugin } from "chest-form";
+    ```
 
-Learn the basics of creating custom components. [Custom Components](./examples/components/README.md/)
+4. **Resolve the Plugin Instance:** Once your plugin is initialized, resolve the `ChestFormPlugin` instance to use its features.
+    ```typescript
+    import { Plugin } from "@serenityjs/plugins";
 
+    import type { ChestFormPlugin } from "chest-form";
+
+    class MyPlugin extends Plugin {
+      public onInitialize(): void {
+        const { ChestForm } = this.resolve<ChestFormPlugin>("chest-form")!;
+      }
+    }
+    ```
+## API Reference
+
+### ChestForm Class
+The `ChestForm` class provides methods to create and manage forms similar to the FormUI system, but using the single or double chest UI.
+
+> **Example Usage**
+
+```typescript
+// Create a new ChestForm instance
+const form = new ChestForm("Chest Form");
+
+// Create a new ItemStack, and add it to a button
+form.button(11, new ItemStack("minecraft:diamond"));
+form.button(13, new ItemStack("minecraft:gold_ingot"));
+form.button(15, new ItemStack("minecraft:iron_ingot"));
+
+// Show the form to the player
+form.show(origin, (index) => {
+  // Handle the button click
+  origin.sendMessage(`You clicked button at index: ${index}`);
+});
+```
