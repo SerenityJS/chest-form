@@ -30,7 +30,9 @@
 
     class MyPlugin extends Plugin {
       public onInitialize(): void {
-        const { ChestForm } = this.resolve<ChestFormPlugin>("chest-form")!;
+        // The resolve method fetches the ChestFormPlugin instance
+        // And we use the ChestFormPlugin type to ensure type safety
+        const { ChestForm } = this.resolve<ChestFormPlugin>("chest-form")!; // Notice the use of `!` can be unsafe if the plugin is not loaded correctly
       }
     }
     ```
