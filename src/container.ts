@@ -5,6 +5,9 @@ import { CompoundTag, IntTag, StringTag } from "@serenityjs/nbt";
 class ChestFormContainer extends Container {
   public static readonly CHEST_TYPE = BlockType.get(BlockIdentifier.Chest);
 
+  // Mark this class as a chest form container
+  public readonly isChestForm = true;
+
   /**
    * The title of the container.
   */

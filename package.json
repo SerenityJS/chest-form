@@ -1,6 +1,6 @@
 {
   "name": "chest-form",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "SerenityJS",
   "description": "Sample plugin provides a basic configuration for plugin usage in the SerenityJS software.",
   "main": "dist/index.js",
