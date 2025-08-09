@@ -21,7 +21,7 @@ class ChestFormPlugin extends Plugin {
    * Constructor for the ChestFormPlugin.
    */
   public constructor() {
-    super("chest-form", "0.1.1");
+    super("chest-form", "0.1.2");
   }
 
   public override onInitialize(): void {
@@ -40,10 +40,10 @@ class ChestFormPlugin extends Plugin {
           if (action.takeOrPlace) {
             const takeOrPlace = action.takeOrPlace;
 
-            const source = player.getContainer(takeOrPlace.source.container.identifier) as ChestFormContainer;
-            const destination = player.getContainer(takeOrPlace.destination.container.identifier) as ChestFormContainer;
+            const source = player.getContainer(takeOrPlace.source.container.identifier);
+            const destination = player.getContainer(takeOrPlace.destination.container.identifier);
 
-            if (destination?.isChestForm) {
+            if (destination instanceof ChestFormContainer) {
               // Get the source container and inventory
               const source = player.getContainer(takeOrPlace.source.container.identifier)!;
               const inventory = player.getContainer(ContainerName.Inventory)!;
@@ -61,7 +61,7 @@ class ChestFormPlugin extends Plugin {
               return false; // Prevent the default behavior for item stack requests in ChestForm
             }
 
-            if (source?.isChestForm) {
+            if (source instanceof ChestFormContainer) {
               // Get the item stack from the source container
               const stack = source.getItem(takeOrPlace.source.slot);
 
@@ -84,11 +84,11 @@ class ChestFormPlugin extends Plugin {
             const swap = action.swap;
 
             // Get the source and destination containers
-            const source = player.getContainer(swap.source.container.identifier) as ChestFormContainer;
-            const destination = player.getContainer(swap.destination.container.identifier) as ChestFormContainer;
+            const source = player.getContainer(swap.source.container.identifier)!;
+            const destination = player.getContainer(swap.destination.container.identifier)!;
 
             // Check if the destination is a ChestFormContainer
-            if (destination?.isChestForm) {
+            if (destination instanceof ChestFormContainer) {
               // Get the item stack from the source container
               const stack = destination.getItem(swap.destination.slot);
 
@@ -120,7 +120,7 @@ class ChestFormPlugin extends Plugin {
             }
 
             // Check if the source is a ChestFormContainer
-            if (source?.isChestForm) {
+            if (source instanceof ChestFormContainer) {
               return false; // Prevent the default behavior for item stack requests in ChestForm
             }
           }
@@ -131,10 +131,10 @@ class ChestFormPlugin extends Plugin {
             const drop = action.drop;
 
             // Get the source container
-            const source = player.getContainer(drop.source.container.identifier) as ChestFormContainer;
+            const source = player.getContainer(drop.source.container.identifier);
 
             // Check if the source is a ChestFormContainer
-            if (source?.isChestForm) {
+            if (source instanceof ChestFormContainer) {
               // Get the item stack from the source container
               const stack = source.getItem(drop.source.slot);
 
