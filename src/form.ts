@@ -6,7 +6,7 @@ class ChestForm {
   /**
    * The container that holds the items for the chest form.
   */
-  public readonly container: ChestFormContainer;
+  private readonly container: ChestFormContainer;
 
   /**
    * Create a new ChestForm.
@@ -29,6 +29,13 @@ class ChestForm {
   }
 
   /**
+   * Clear all items from the chest form.
+   */
+  public clear(): void {
+    this.container.clear();
+  }
+
+  /**
    * Show the chest form to the player.
    * @param player The player to show the chest form to.
    * @param callback The callback function to call when an item is selected.
@@ -36,6 +43,14 @@ class ChestForm {
   public show(player: Player, callback: (index: number) => void): void {
     // Show the container to the player
     this.container.show(player, callback);
+  }
+
+  /**
+   * Close the chest form for the player.
+   * @param player The player to close the chest form for.
+   */
+  public close(player: Player): void {
+    this.container.close(player);
   }
 }
 

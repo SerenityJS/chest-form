@@ -1,4 +1,4 @@
-import { BlockActorDataPacket, BlockPosition, ContainerId, ContainerOpenPacket, ContainerType, UpdateBlockFlagsType, UpdateBlockLayerType, UpdateBlockPacket } from "@serenityjs/protocol";
+import { BlockActorDataPacket, BlockPosition, ContainerOpenPacket, ContainerType, UpdateBlockFlagsType, UpdateBlockLayerType, UpdateBlockPacket } from "@serenityjs/protocol";
 import { BlockIdentifier, BlockType, Container, Player } from "@serenityjs/core";
 import { CompoundTag, IntTag, StringTag } from "@serenityjs/nbt";
 
@@ -27,15 +27,19 @@ class ChestFormContainer extends Container {
    */
   public constructor(title: string, size: number = 27) {
     // Call the parent constructor with the type, identifier, and size
-    super(ContainerType.Container, ContainerId.None, size);
+    super(ContainerType.Container, size);
 
     // Set the title of the container
     this.title = title;
   }
 
-  public override show(player: Player, callback?: (index: number) => void): void {
+  public callCallback(index: number): void {
+    if (this.showCallback) this.showCallback(index);
+  }
+
+  public override show(player: Player, callback?: (index: number) => void): number {
     // Call the original show method
-    super.show(player);
+    const identifier = super.show(player);
 
     // Store the callback if provided
     this.showCallback = callback || null;
@@ -79,7 +83,7 @@ class ChestFormContainer extends Container {
     // Create a new ContainerOpenPacket to open the chest form
     const containerOpen = new ContainerOpenPacket();
     containerOpen.type = this.type;
-    containerOpen.identifier = this.identifier;
+    containerOpen.identifier = identifier;
     containerOpen.position = new BlockPosition(x, y + 3, z);
     containerOpen.uniqueId = -1n;
 
@@ -91,9 +95,12 @@ class ChestFormContainer extends Container {
       // Update the container's content
       this.update()
     });
+
+    // Return the identifier of the container
+    return identifier;
   }
 
-  public override close(player: Player, serverInitiated?: boolean, index: number = -1): void {
+  public override close(player: Player, serverInitiated?: boolean): void {
     // Call the original close method
     super.close(player, serverInitiated);
 
@@ -117,7 +124,7 @@ class ChestFormContainer extends Container {
     }
 
     // If a callback is provided, call it with the index
-    if (this.showCallback) this.showCallback(index);
+    if (this.showCallback) this.showCallback(-1);
 
     // Reset the placed positions and callback
     this.placedPositions = [];
